@@ -130,6 +130,7 @@ void Simulation::run() {
 
         if (turnCounter % 100 == 0) {
             this->addLog("[CZAS] Minela " + std::to_string(turnCounter) + ". tura symulacji.");
+            continue;
         }
 
         if (turnCounter >= 1000 && currentState != GameState::GAME_OVER) {

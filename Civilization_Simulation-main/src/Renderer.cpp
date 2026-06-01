@@ -38,13 +38,13 @@ void Renderer::initSlider() {
     // Tor suwaka na środku u dołu ekranu
     sliderTrack.setSize(sf::Vector2f(trackWidth, trackHeight));
     sliderTrack.setFillColor(sf::Color(100, 100, 100));
-    sliderTrack.setPosition(windowWidth / 2.0f - trackWidth / 2.0f, windowHeight - 60.0f);
+    sliderTrack.setPosition(windowWidth / 1.2f - trackWidth / 2.0f, windowHeight - 60.0f);
 
     // Przycisk suwaka
     sliderHandle.setSize(sf::Vector2f(20.0f, 30.0f));
     sliderHandle.setFillColor(sf::Color(200, 200, 200));
     sliderHandle.setOrigin(10.0f, 15.0f);
-    sliderHandle.setPosition(windowWidth / 2.0f, windowHeight - 55.0f);
+    sliderHandle.setPosition(windowWidth / 1.2f, windowHeight - 55.0f);
 }
 
 // Funkcja obsługująca zmianę wartości na podstawie myszki:
@@ -399,10 +399,11 @@ void Renderer::drawUI() {
     }
 
 //Tabela wydarzeń w symulacji
-    float logStartY = currentY + 40.0f; 
+    float logPanel = 320.0f;
+    float logPosX = posX - logPanel - 150.0f; 
     
-    sf::RectangleShape logLine(sf::Vector2f(windowWidth - posX - 30.0f, 2.0f));
-    logLine.setPosition(posX + 15.0f, logStartY);
+    sf::RectangleShape logLine(sf::Vector2f(logPanel, 2.0f));
+    logLine.setPosition(logPosX, posY);
     logLine.setFillColor(sf::Color(70, 70, 70));
     window->draw(logLine);
 
@@ -412,12 +413,12 @@ void Renderer::drawUI() {
     logTitle.setString("Wydarzenia: ");
     logTitle.setCharacterSize(16);
     logTitle.setFillColor(sf::Color(255, 200, 50));
-    logTitle.setPosition(posX + 15.0f, logStartY + 15.0f);
+    logTitle.setPosition(logPosX, posY + 10.0f);
     window->draw(logTitle);
 
     // Pobieramy i rysujemy logi z symulacji
     std::vector<std::string> logs = sim->getLogsCopy();
-    float textY = logStartY + 45.0f;
+    float textY = posY + 90.0f;
 
     for (const std::string& msg : logs) {
         sf::Text logText;
@@ -425,10 +426,10 @@ void Renderer::drawUI() {
         logText.setString(msg);
         logText.setCharacterSize(14);
         logText.setFillColor(sf::Color(200, 200, 200));
-        logText.setPosition(posX + 15.0f, textY);
+        logText.setPosition(logPosX, textY);
         window->draw(logText);
 
-        textY += 20.0f; // Odstęp między linijkami logów
+        textY += 25.0f; // Odstęp między linijkami logów
     }
 
 }
