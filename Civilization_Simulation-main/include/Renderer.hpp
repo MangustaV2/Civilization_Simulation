@@ -2,17 +2,8 @@
 
 #include <string>
 #include <SFML/Graphics.hpp>
-class Simulation; 
 
-struct InputField {
-    sf::RectangleShape box;
-    sf::Text label;
-    sf::Text textDisplay;
-    std::string value;
-    bool isSelected;
-    int minVal;
-    int maxVal;
-};
+class Simulation; 
 
 class Renderer {
 private:
@@ -23,8 +14,12 @@ private:
     sf::Font font;
     Simulation* sim;
 
-    std::vector<InputField> inputs;
-    void initInputFields();
+    sf::RectangleShape sliderTrack;
+    sf::RectangleShape sliderHandle;
+    bool isDraggingSlider;
+
+    void initSlider();
+    void updateSliderFromMouse(int mouseX);
 
 public:
     Renderer(int width, int height, Simulation* simulation);

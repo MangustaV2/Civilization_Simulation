@@ -5,6 +5,7 @@
 #include "Map.hpp"
 
 class Civilization;
+class Simulation;
 
 class Unit : public GameObject {
 protected:
@@ -45,7 +46,7 @@ public:
 
     virtual ~Unit();
 
-    virtual void performAction(Map* map) = 0;
+    virtual void performAction(Map* map, Simulation* sim) = 0;
     
     int getCarriedResources() const { return carriedResources; }
     

@@ -6,7 +6,7 @@
 #include <random>
 #include <vector>
 
-void Scout::performAction(Map* map) {
+void Scout::performAction(Map* map, Simulation* sim) {
     if (map == nullptr || owner == nullptr) return;
 
     bool hasSpecificTarget = false;

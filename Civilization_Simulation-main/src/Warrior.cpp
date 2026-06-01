@@ -13,7 +13,7 @@ void Warrior::setProtectedTarget(Gatherer* target) {
     this->protectedTarget = target;
 }
 
-void Warrior::performAction(Map* map){
+void Warrior::performAction(Map* map, Simulation* sim){
     if (map == nullptr || owner == nullptr) return;
 
     //określające środek obecnego patrolu

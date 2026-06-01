@@ -26,82 +26,47 @@ Renderer::Renderer(int width, int height, Simulation* simulation)
         std::cerr << "[OSTRZEZENIE] Nie udalo sie zaladowac czcionki arial.ttf!\n";
     }
 
-    initInputFields();
+    isDraggingSlider = false;
+    initSlider();
 }
 
-void Renderer::initInputFields() {
-    float centerX = windowWidth / 2.0f;
-    float startY = windowHeight / 2.0f;
-
-    // Wpisanie tekstów i ustalenie czcionki
-    // Surowce
-    InputField resInput;
-    resInput.isSelected = false;
-    resInput.value = "5";
-    resInput.minVal = 5;
-    resInput.maxVal = 15;
-    resInput.label.setFont(font);
-    resInput.label.setString("Co ile tur ma pojawiac sie zloze surowcow (min - 5, max - 15):");
-    resInput.label.setCharacterSize(24);
-
-    // Artefakty
-    InputField artInput;
-    artInput.isSelected = false;
-    artInput.value = "10";
-    artInput.minVal = 10;
-    artInput.maxVal = 30;
-    artInput.label.setFont(font);
-    artInput.label.setString("Co ile tur maja pojawiac sie artefakty (min - 10, max - 30):");
-    artInput.label.setCharacterSize(24);
-
-    // Obliczanie idealnego środka
-    float label1Width = resInput.label.getGlobalBounds().width;
-    float label2Width = artInput.label.getGlobalBounds().width;
+// Suwak:
+void Renderer::initSlider() {
+    float trackWidth = 300.0f;
+    float trackHeight = 10.0f;
     
-    // Który tekst jest dłuższy - pod niego wyrównujemy okienka
-    float maxLabelWidth = std::max(label1Width, label2Width);
+    // Tor suwaka na środku u dołu ekranu
+    sliderTrack.setSize(sf::Vector2f(trackWidth, trackHeight));
+    sliderTrack.setFillColor(sf::Color(100, 100, 100));
+    sliderTrack.setPosition(windowWidth / 2.0f - trackWidth / 2.0f, windowHeight - 60.0f);
 
-    float gap = 30.0f;
-    float boxWidth = 100.0f;
-    float totalRowWidth = maxLabelWidth + gap + boxWidth;
+    // Przycisk suwaka
+    sliderHandle.setSize(sf::Vector2f(20.0f, 30.0f));
+    sliderHandle.setFillColor(sf::Color(200, 200, 200));
+    sliderHandle.setOrigin(10.0f, 15.0f);
+    sliderHandle.setPosition(windowWidth / 2.0f, windowHeight - 55.0f);
+}
 
-    // Punkt X, od którego zaczną się oba teksty
-    float startX = centerX - (totalRowWidth / 2.0f);
+// Funkcja obsługująca zmianę wartości na podstawie myszki:
+void Renderer::updateSliderFromMouse(int mouseX) {
+    float minX = sliderTrack.getPosition().x;
+    float maxX = minX + sliderTrack.getSize().x;
+
+    float newX = mouseX;
+    if (newX < minX) newX = minX;
+    if (newX > maxX) newX = maxX;
+
+    sliderHandle.setPosition(newX, sliderHandle.getPosition().y);
+
+    float percentage = (newX - minX) / sliderTrack.getSize().x; 
     
-    // Wspólny punkt X dla obu okienek (prawa strona, idealnie w pionowej linii)
-    float boxX = startX + maxLabelWidth + gap;
-    float textX = boxX + 15.0f; // Margines dla wpisywanego tekstu wewnątrz okienka
-
-    // Config pozycji surowców
-    resInput.box.setSize(sf::Vector2f(boxWidth, 40.0f));
-    resInput.box.setPosition(boxX, startY);
-    resInput.box.setFillColor(sf::Color(50, 50, 50));
-    resInput.box.setOutlineThickness(2.0f);
-    resInput.box.setOutlineColor(sf::Color::White);
-
-    resInput.label.setPosition(startX, startY + 5.0f);
-
-    resInput.textDisplay.setFont(font);
-    resInput.textDisplay.setCharacterSize(24);
-    resInput.textDisplay.setPosition(textX, startY + 5.0f);
-    resInput.textDisplay.setString(resInput.value);
-
-    // Config pozycji artefaktów
-    artInput.box.setSize(sf::Vector2f(boxWidth, 40.0f));
-    artInput.box.setPosition(boxX, startY + 80.0f);
-    artInput.box.setFillColor(sf::Color(50, 50, 50));
-    artInput.box.setOutlineThickness(2.0f);
-    artInput.box.setOutlineColor(sf::Color::White);
-
-    artInput.label.setPosition(startX, startY + 85.0f);
-
-    artInput.textDisplay.setFont(font);
-    artInput.textDisplay.setCharacterSize(24);
-    artInput.textDisplay.setPosition(textX, startY + 85.0f);
-    artInput.textDisplay.setString(artInput.value);
-
-    inputs.push_back(resInput);
-    inputs.push_back(artInput);
+    int minDelay = 10;   // 10 ms (max w prawo)
+    int maxDelay = 1000; // 1000 ms (max w lewo)
+    
+    // Odwracamy proporcję: 0% to najwolniej (maxDelay), 100% to najszybciej (minDelay)
+    int delay = maxDelay - percentage * (maxDelay - minDelay);
+    
+    sim->setTickDelay(delay);
 }
 
 Renderer::~Renderer() {
@@ -117,64 +82,30 @@ void Renderer::renderFrame() {
             window->close();
         }
 
-    if (sim->getCurrentState() == GameState::MENU) {
-            
-            // Klikanie myszką w pola
-            if (event.type == sf::Event::MouseButtonPressed && event.mouseButton.button == sf::Mouse::Left) {
-                sf::Vector2f mousePos(event.mouseButton.x, event.mouseButton.y);
-                for (auto& input : inputs) {
-                    if (input.box.getGlobalBounds().contains(mousePos)) {
-                        input.isSelected = true;
-                        input.box.setOutlineColor(sf::Color::Red); // Czerwony oznacza aktywnosc
-                    } else {
-                        input.isSelected = false;
-                        input.box.setOutlineColor(sf::Color::White);
-                    }
-                }
+        // Obsługa suwaka
+        if (event.type == sf::Event::MouseButtonPressed && event.mouseButton.button == sf::Mouse::Left) {
+            if (sliderHandle.getGlobalBounds().contains(event.mouseButton.x, event.mouseButton.y) ||
+                sliderTrack.getGlobalBounds().contains(event.mouseButton.x, event.mouseButton.y)) {
+                isDraggingSlider = true;
+                updateSliderFromMouse(event.mouseButton.x);
             }
+        }
+        else if (event.type == sf::Event::MouseButtonReleased && event.mouseButton.button == sf::Mouse::Left) {
+            isDraggingSlider = false;
+        }
+        else if (event.type == sf::Event::MouseMoved) {
+            if (isDraggingSlider) {
+                updateSliderFromMouse(event.mouseMove.x);
+            }
+        }
 
-            // Wpisywanie liczby do pola
-            if (event.type == sf::Event::TextEntered) {
-                for (auto& input : inputs) {
-                    if (input.isSelected) {
-                        // Obsługa Backspace (Unicode 8)
-                        if (event.text.unicode == 8 && !input.value.empty()) {
-                            input.value.pop_back();
-                        }
-                        // Obsługa cyfr od 0 do 9 (Unicode 48 - 57)
-                        else if (event.text.unicode >= 48 && event.text.unicode <= 57) {
-                            if (input.value.length() < 3) { // Limit znaków do 3
-                                input.value += static_cast<char>(event.text.unicode);
-                            }
-                        }
-                        input.textDisplay.setString(input.value);
-                    }
-                }
-            }
+    if (sim->getCurrentState() == GameState::MENU) {
 
             // Wciśnięcie entera
             if (event.type == sf::Event::KeyPressed) {
                 if (event.key.code == sf::Keyboard::Enter) {
-                    
-                    // Walidacja obu pól
-                    int resVal = inputs[0].value.empty() ? 0 : std::stoi(inputs[0].value);
-                    int artVal = inputs[1].value.empty() ? 0 : std::stoi(inputs[1].value);
 
-                    // Przycinanie do dozwolonych wartości
-                    if (resVal < inputs[0].minVal) resVal = inputs[0].minVal;
-                    if (resVal > inputs[0].maxVal) resVal = inputs[0].maxVal;
-                    
-                    if (artVal < inputs[1].minVal) artVal = inputs[1].minVal;
-                    if (artVal > inputs[1].maxVal) artVal = inputs[1].maxVal;
-
-                    // Uaktualnianie wyświetlanego tekstu na ten zwalidowany
-                    inputs[0].value = std::to_string(resVal);
-                    inputs[0].textDisplay.setString(inputs[0].value);
-                    inputs[1].value = std::to_string(artVal);
-                    inputs[1].textDisplay.setString(inputs[1].value);
-
-                    sim->setResourceSpawnInterval(resVal);
-                    sim->setArtifactSpawnInterval(artVal);
+                    sim->inputFromCSV("input.csv"); // Wczytanie danych z pliku CSV
 
                     sim->setCurrentState(GameState::SIMULATION);
                 }
@@ -231,32 +162,14 @@ void Renderer::drawMenu() {
 
     window->draw(title);
 
-    sf::Text subtitle;
-    subtitle.setFont(font);
-    subtitle.setString("Wprowadz dane poczatkowe: ");
-    subtitle.setCharacterSize(45);
-    subtitle.setFillColor(sf::Color::White);
-    subtitle.setStyle(sf::Text::Bold);
-    // Centrowanie tekstu na środku ekranu
-    float subtitleX = (windowWidth / 2.0f) - (subtitle.getGlobalBounds().width / 2.0f);
-    subtitle.setPosition(subtitleX, windowHeight * 0.4f);
-
-    window->draw(subtitle);
-
     sf::Text info;
     info.setFont(font);
-    info.setString("Nacisnij ENTER, aby rozpoczac\nNacisnij ESC, aby wyjsc");
+    info.setString("Nacisnij ENTER, aby wczytac dane z pliku i rozpoczac symulacje\nNacisnij ESC, aby wyjsc");
     info.setCharacterSize(30);
     info.setFillColor(sf::Color::Yellow);
     info.setPosition((windowWidth / 2.0f) - (info.getGlobalBounds().width / 2.0f), windowHeight * 0.8f);
     window->draw(info);
 
-    // Rysowanie dynamicznych pól wejściowych
-    for (const auto& input : inputs) {
-        window->draw(input.label);
-        window->draw(input.box);
-        window->draw(input.textDisplay);
-    }
 }
 
 void Renderer::drawGameOver() {
@@ -401,6 +314,20 @@ void Renderer::drawEntities() {
 }
 
 void Renderer::drawUI() {
+
+    // Rysowanie suwaka
+    window->draw(sliderTrack);
+    window->draw(sliderHandle);
+
+    // Tekst nad suwakiem
+    sf::Text sliderText;
+    sliderText.setFont(font);
+    sliderText.setString("Tempo: ");
+    sliderText.setCharacterSize(20);
+    sliderText.setFillColor(sf::Color::White);
+    sliderText.setPosition(sliderTrack.getPosition().x - 20.0f, sliderTrack.getPosition().y - 35.0f);
+    window->draw(sliderText);
+
     // Ustawienie ramki w prawym górnym rogu
     float boxWidth = 280.0f;
     float boxHeight = 220.0f;
@@ -454,6 +381,11 @@ void Renderer::drawUI() {
         else if (civName == "Chiny") civColor = sf::Color(255, 100, 100);  // Czerwony
         else civColor = sf::Color::White;
 
+        sf::Text bldText;
+        bldText.setFont(font);
+        bldText.setString(civName + " | Budynki: " + std::to_string(civ->getBuildingsCount()) + " | Surowce: " + std::to_string(civ->getStoredResources()));
+        bldText.setCharacterSize(14);
+
         // Komunikat o budynkach
         sf::Text civText;
         civText.setFont(font);
@@ -465,4 +397,38 @@ void Renderer::drawUI() {
 
         currentY += 28.0f; // Przesunięcie w dół tekstu
     }
+
+//Tabela wydarzeń w symulacji
+    float logStartY = currentY + 40.0f; 
+    
+    sf::RectangleShape logLine(sf::Vector2f(windowWidth - posX - 30.0f, 2.0f));
+    logLine.setPosition(posX + 15.0f, logStartY);
+    logLine.setFillColor(sf::Color(70, 70, 70));
+    window->draw(logLine);
+
+    // Tytuł tabeli
+    sf::Text logTitle;
+    logTitle.setFont(font);
+    logTitle.setString("Wydarzenia: ");
+    logTitle.setCharacterSize(16);
+    logTitle.setFillColor(sf::Color(255, 200, 50));
+    logTitle.setPosition(posX + 15.0f, logStartY + 15.0f);
+    window->draw(logTitle);
+
+    // Pobieramy i rysujemy logi z symulacji
+    std::vector<std::string> logs = sim->getLogsCopy();
+    float textY = logStartY + 45.0f;
+
+    for (const std::string& msg : logs) {
+        sf::Text logText;
+        logText.setFont(font);
+        logText.setString(msg);
+        logText.setCharacterSize(14);
+        logText.setFillColor(sf::Color(200, 200, 200));
+        logText.setPosition(posX + 15.0f, textY);
+        window->draw(logText);
+
+        textY += 20.0f; // Odstęp między linijkami logów
+    }
+
 }

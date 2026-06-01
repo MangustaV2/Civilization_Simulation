@@ -18,6 +18,8 @@
 #include <thread>
 #include <chrono>
 #include <future>
+#include <sstream>
+#include <random>
 
 using namespace std;
 
@@ -36,9 +38,9 @@ Simulation::Simulation() {
 }
 
 void Simulation::run() {
-    cout << "=== ROZPOCZYNAMY SYMULACJE CYWILIZACJI! ===" << endl;
+    this->addLog("[START] Rozpoczeto symulacje cywilizacji!");
     map.generateMap();
-    cout << "--- TRWA ROZSTAWIANIE BAZ I JEDNOSTEK CYWILIZACJI ---" << endl;
+    this->addLog("[START] Bazy i jednostki zostały rozstawione!");
 
     for (Civilization*civ : civilizations) {
         // Losowanie baz cywilizacji
@@ -61,6 +63,9 @@ void Simulation::run() {
     // Tworzenie obiektu Renderera
     Renderer renderer(1920, 1080, this);
 
+    // Stoper
+    auto lastTickTime = std::chrono::steady_clock::now();
+
     // Główna pętla renderowania (działa dopóki okno SFML nie zostanie zamknięte)
     while (renderer.isWindowOpen()) {
         
@@ -68,46 +73,70 @@ void Simulation::run() {
         renderer.renderFrame();
 
         if (currentState == GameState::SIMULATION) {
+
+            // Ile czasu minęło od ostatniej tury
+            auto currentTime = std::chrono::steady_clock::now();
+            auto elapsedTime = std::chrono::duration_cast<std::chrono::milliseconds>(currentTime - lastTickTime).count();
+
+            // Jeśli minęło tyle czasu ile ustawił suwak, to wykonujemy turę
+            if (elapsedTime >= tickDelayMs) {
+                lastTickTime = currentTime;
             
-            std::lock_guard<std::recursive_mutex> lock(map.getMutex());
-            turnCounter++;
+                turnCounter++;
 
-            // Resp surowców co ilość wpisaną z inputa
-            if (resourceSpawnInterval > 0 &&turnCounter % resourceSpawnInterval == 0) {
-                generateRandom(SpawnType::RESOURCE);
-            }
-
-            // Resp artefaktów co ilość wpisaną z inputa
-            if (artifactSpawnInterval > 0 && turnCounter % artifactSpawnInterval == 0) {
-                generateRandom(SpawnType::ARTIFACT);
-            }
-
-            for (Civilization* civ : civilizations) {
-                civ->playTurn(&map, this, civilizations);
-            }
-
-            for(GameObject* obj : map.entities) {
-                if (obj != nullptr && obj->get_isActive()) {
-                    obj->update();
+                // Resp surowców co ilość z inputa
+                if (resourceSpawnInterval > 0 &&turnCounter % resourceSpawnInterval == 0) {
+                    generateRandom(SpawnType::RESOURCE);
                 }
-            }
 
-            std::this_thread::sleep_for(std::chrono::milliseconds(125));
+                // Resp artefaktów co ilość z inputa
+                if (artifactSpawnInterval > 0 && turnCounter % artifactSpawnInterval == 0) {
+                    generateRandom(SpawnType::ARTIFACT);
+                }
 
-            //Warunek zwycięstwa
-            for (Civilization* civ : civilizations) {
-                // Czy wybudowali 3 budynki
-                if (civ->getBuildingsCount() >= 3) {
-                    winner = civ;
-                    currentState = GameState::GAME_OVER;
-                    saveToCSV();
-                    break;
+                // Równoległe tury cywilizacji
+                std::vector<std::thread> turnThreads;
+
+                // Tura każdej cywilizacji w osobnym wątku
+                for (Civilization* civ : civilizations) {
+                    turnThreads.emplace_back(&Civilization::playTurn, civ, &map, this, civilizations);
+                }
+
+                // Główny program czeka aż wszystkie cywilizacje zakończą swój ruch
+                for (auto& t : turnThreads) {
+                    if (t.joinable()) {
+                        t.join();
+                    }
+                }
+
+                for(GameObject* obj : map.entities) {
+                    if (obj != nullptr && obj->get_isActive()) {
+                        obj->update();
+                    }
+                }
+            
+                //Warunek zwycięstwa
+                for (Civilization* civ : civilizations) {
+                    // Czy wybudowali 3 budynki
+                    if (civ->getBuildingsCount() >= 3) {
+                        winner = civ;
+                        currentState = GameState::GAME_OVER;
+                        saveToCSV();
+                        break;
+                    }    
                 }
             }
         }
-        if (turnCounter >= 500 && currentState != GameState::GAME_OVER) {
+
+        if (turnCounter % 100 == 0) {
+            this->addLog("[CZAS] Minela " + std::to_string(turnCounter) + ". tura symulacji.");
+        }
+
+        if (turnCounter >= 1000 && currentState != GameState::GAME_OVER) {
             currentState = GameState::GAME_OVER;
-            saveToCSV(); 
+            saveToCSV();
+            std::string winMsg = "[ZWYCIESTWO] " + winner->getName() + " wybudowal 3 budynki!";
+            addLog(winMsg); 
             break;
         }
     }
@@ -147,11 +176,13 @@ void Simulation::generateRandom(SpawnType type, Civilization* civ) {
             if (type == SpawnType::RESOURCE) {
                 // Losujemy złoże surowca wielkości 2 do 6
                 map.addEntity(new Resource(rx, ry, (rand() % 5) + 2));
+                this->addLog("[NATURA] Nowe zloze surowcow pojawilo sie na mapie!");
                 break;
             } 
             else if (type == SpawnType::ARTIFACT) {
                 // Losujemy artefakt
                 map.addEntity(new Artifact(rx, ry));
+                this->addLog("[NATURA] Magiczny artefakt objawil sie w nieznanym miejscu!");
                 break;
             } 
             else if (type == SpawnType::CIVILIZATION_BASE && civ != nullptr) {
@@ -175,13 +206,46 @@ void Simulation::generateRandom(SpawnType type, Civilization* civ) {
                 // Jeśli zachowaliśmy odpowiedni dystans, stawiamy bazę
                 if (!tooClose) {
                     civ->setBasePosition(rx, ry);
-                    std::cout << "[Silnik] Rozmieszczono baze cywilizacji na kordynatach: (" << rx << ", " << ry << ")\\n";
                     break;
                 }
             }
         }
         attempts++;
     }
+}
+
+void Simulation::inputFromCSV(const std::string& filename) {
+    std::ifstream file(filename);
+    if (!file.is_open()) {
+        std::cerr << "[OSTRZEZENIE] Nie mozna otworzyc pliku " << filename << "! Uzywam wartosci domyslnych (5 i 10).\n";
+        return;
+    }
+
+    std::string line;
+    // Czytanie pliku
+    while (std::getline(file, line)) {
+        std::stringstream ss(line);
+        std::string key, valueStr;
+        
+        // Rozdzielamy linijkę przecinkiem
+        if (std::getline(ss, key, ',') && std::getline(ss, valueStr, ',')) {
+            try {
+                int value = std::stoi(valueStr);
+                
+                if (key == "resourceSpawnInterval") {
+                    this->resourceSpawnInterval = value;
+                } 
+                else if (key == "artifactSpawnInterval") {
+                    this->artifactSpawnInterval = value;
+                }
+            } catch (const std::exception& e) {
+                std::cerr << "[BLAD] Niepoprawna wartosc w pliku CSV dla klucza: " << key << "\n";
+            }
+        }
+    }
+    std::cout << "[INFO] Pomyslnie wczytano input.csv!\n";
+    std::cout << " -> Surowce pojawiac sie beda co " << resourceSpawnInterval << " tur\n";
+    std::cout << " -> Artefakty pojawiac sie beda co " << artifactSpawnInterval << " tur\n";
 }
 
 void Simulation::saveToCSV() {
@@ -257,7 +321,9 @@ void Simulation::resolveCombat(Unit* u1, Unit* u2) {
     else if (type1 == 2 && type2 == 2) winChanceU1 = 50; // W vs W
 
     // Rzut kością (losujemy liczbę 0-99)
-    int roll = rand() % 100;
+    static thread_local std::mt19937 generator(std::random_device{}());
+    std::uniform_int_distribution<int> distribution(0, 99);
+    int roll = distribution(generator);
     
     Unit* winner = nullptr;
     Unit* loser = nullptr;
@@ -271,10 +337,14 @@ void Simulation::resolveCombat(Unit* u1, Unit* u2) {
         loser = u1;
     }
 
-    cout << "\n=== DOSZLO DO WALKI! ===\n";
-    cout << "Szansa Jednostki 1 na wygrana: " << winChanceU1 << "%\n";
-    cout << "Wylosowano wartosc: " << roll << " -> Wygrywa: " 
-              << (winner == u1 ? "Jednostka 1" : "Jednostka 2") << "!\n";
+    // Tworzenie wiadomości do UI
+    std::string winnerName = winner->getOwner()->getName();
+    std::string loserName = loser->getOwner()->getName();
+    std::string logMsg = "[WALKA] " + winnerName + " pokonuje jednostke z " + loserName + "!";
+    
+    // Dodanie do dziennika UI (oraz ewentualnie do konsoli)
+    this->addLog(logMsg);
+    std::cout << logMsg << std::endl;
 
     // Zrzucanie surowców
     int droppedAmount = loser->getCarriedResources();

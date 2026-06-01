@@ -76,6 +76,7 @@ bool Civilization::buildCity(Simulation* sim, Map* map) {
         storedResources -= currentCost;
 
         buildings.push_back(new Building(currentCost, Benefit::INCREASE_ARMY));
+        sim->addLog("[BUDOWA] " + this->getName() + " wznosi nowy budynek!");
 
         //tworzernie nowe jednostki w pamięci
         Scout* newScout = new Scout(baseX, baseY, this);
@@ -100,10 +101,10 @@ bool Civilization::buildCity(Simulation* sim, Map* map) {
 
         return true;
     }
+    return false;
 }
 
 void Civilization::playTurn(Map* map, Simulation* sim, const std::vector<Civilization*>& allCivs) {
-    
     
     {
         std::lock_guard<std::recursive_mutex> lock(map->getMutex());
@@ -134,7 +135,7 @@ void Civilization::playTurn(Map* map, Simulation* sim, const std::vector<Civiliz
             continue;
         }
             
-        unit->performAction(map); // Ruch jednostki
+        unit->performAction(map, sim); // Ruch jednostki
 
         // faza walki
         for (Civilization* otherCiv : allCivs) {

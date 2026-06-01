@@ -44,7 +44,7 @@ public:
         
     }
 
-    void performAction(Map* map) override;
+    void performAction(Map* map, Simulation* sim) override;
 
     bool get_is_Waiting(){return isWaiting;};
 

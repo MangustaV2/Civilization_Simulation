@@ -32,6 +32,11 @@ private:
     int resourceSpawnInterval;
     int artifactSpawnInterval;
 
+    int tickDelayMs = 250;
+
+    std::vector<std::string> eventLogs;
+    std::mutex logMutex;
+
 public:
 
     virtual ~Simulation();
@@ -58,4 +63,22 @@ public:
     
     void setResourceSpawnInterval(int val) { resourceSpawnInterval = val; }
     void setArtifactSpawnInterval(int val) { artifactSpawnInterval = val; }
+
+    int getTickDelay() const { return tickDelayMs; }
+    void setTickDelay(int ms) { tickDelayMs = ms; }
+
+    void inputFromCSV(const std::string& filename);
+
+    void addLog(const std::string& message) {
+        std::lock_guard<std::mutex> lock(logMutex);
+        eventLogs.push_back(message);
+        if (eventLogs.size() > 15) {
+            eventLogs.erase(eventLogs.begin());
+        }
+    }
+
+    std::vector<std::string> getLogsCopy() {
+        std::lock_guard<std::mutex> lock(logMutex);
+        return eventLogs;
+    }
 };

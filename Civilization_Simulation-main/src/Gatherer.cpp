@@ -4,11 +4,12 @@
 #include "..\include\Resource.hpp"
 #include "..\include\DroppedResource.hpp"
 #include "..\include\Map.hpp"
+#include "..\include\Simulation.hpp"
 #include <iostream>
 #include <algorithm>
 
 
-void Gatherer::performAction(Map* map){
+void Gatherer::performAction(Map* map, Simulation* sim){
 
     if (map == nullptr || !isActive) return;
 
@@ -94,7 +95,7 @@ void Gatherer::performAction(Map* map){
         if (this->get_X() == this->owner->get_X() && this->get_Y() == this->owner->get_Y()) {
         if (carriedResources > 0) {
             owner->addResource(carriedResources);
-            std::cout << "Gatherer zrzucil " << carriedResources << " surowcow w bazie.\n";
+            sim->addLog("[ZBIORY] Zbieracz (" + this->owner->getName() + ") zrzucil " + std::to_string(carriedResources) + " surowcow.");
             carriedResources = 0;
             isWaiting = true; 
             targetX = -1;

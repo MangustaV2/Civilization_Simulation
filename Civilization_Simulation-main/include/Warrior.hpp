@@ -39,7 +39,7 @@ public:
 
     void setProtectedTarget(Gatherer* target);
 
-    void performAction(Map* map) override;
+    void performAction(Map* map, Simulation* sim) override;
 
 };
 
