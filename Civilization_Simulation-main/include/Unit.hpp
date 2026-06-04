@@ -38,17 +38,17 @@ public:
 
     void update() override;
 
-    void move(Map* map, int targetX, int targetY);
+    void move(Map* map, int targetX, int targetY);// Ruch jednostki w stronę docelowych koordynatów
 
-    void pickUpArtifact(Artifact* artifact);
+    void pickUpArtifact(Artifact* artifact);// Funkcja do podnoszenia artefaktów przez jednostkę
 
-    void defeat();
+    void defeat();// Funkcja wywoływana, gdy jednostka zostaje pokonana (np. w walce)
 
     virtual ~Unit();
 
-    virtual void performAction(Map* map, Simulation* sim) = 0;
+    virtual void performAction(Map* map, Simulation* sim) = 0;//logika działania jednostki (zależna od typu)
     
-    int getCarriedResources() const { return carriedResources; }
+    int getCarriedResources() const { return carriedResources; }// Funkcja do pobierania ilości nośnych surowców
     
-    Civilization* getOwner() const { return owner; }
+    Civilization* getOwner() const { return owner; }// Funkcja do pobierania właściciela jednostki
 };

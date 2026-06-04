@@ -20,7 +20,7 @@ public:
 
     void addEntity(GameObject* obj);//dodawanie obiekyu do vektora
 
-    void remove_Entity(GameObject* object);//usuwanie 
+    void remove_Entity(GameObject* object);//usuwanie obiektu z vektora
 
     GameObject* getTileContent(int x, int y, GameObject* ignore = nullptr);//sprawdzanie konkretnego pola
     

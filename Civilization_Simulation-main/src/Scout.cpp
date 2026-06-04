@@ -60,7 +60,7 @@ void Scout::performAction(Map* map, Simulation* sim) {
     // Zwiadowca idzie w stronę artefaktu lub w losowe miejsce
     this->move(map, targetX, targetY);
 
-    // 4. FAZA PODNOSZENIA (Po wykonaniu ruchu)
+    // PODNOSZENIE (Po wykonaniu ruchu)
     std::vector<GameObject*> objectsOnTile = map->getObjectInGrid(this->get_X(), this->get_Y(), 0);
     
     for (GameObject* obj : objectsOnTile) {

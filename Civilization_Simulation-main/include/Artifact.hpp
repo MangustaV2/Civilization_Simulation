@@ -29,6 +29,7 @@ public:
 
     void update() override;
 
+    // Funkcje do pobierania informacji o efekcie artefaktu
     Effect getEffect() const{
         return effect.type;
     };

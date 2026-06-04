@@ -44,17 +44,19 @@ public:
         
     }
 
-    void performAction(Map* map, Simulation* sim) override;
+    void performAction(Map* map, Simulation* sim) override;//logika działania zbieracza
 
-    bool get_is_Waiting(){return isWaiting;};
-
+    // Funkcja do przypisania konkretnego celu zbierania (koordynatów surowca) przez cywilizację
     void assignTargetResource(int x, int y){
         targetX = x;
         targetY = y;
         isWaiting = false;
     }
 
+    // Funkcje do pobierania informacji o aktualnym celu zbieracza
     int getTargetX() const { return targetX; }
 
     int getTargetY() const { return targetY; }
+
+    bool get_is_Waiting(){return isWaiting;};
 };

@@ -50,8 +50,6 @@ public:
         this->knownResources = {};
     }
 
-    std::string getName() const { return name; }
-
     void reportResources(int x, int y);//odbiur kordynatów od zwiadowcy/wojownika
 
     void dispatchGatherer();//wysłanie wolnego zbieracza
@@ -62,13 +60,30 @@ public:
 
     bool buildCity(Simulation* sim, Map* map); // budowanie budynku
 
-    //Sprawdzanie wygranej
-    int getBuildingsCount() const {return buildings.size();}
+    int getBuildingsCount() const {return buildings.size();}//Sprawdzanie wygranej
 
-    void playTurn(Map* map, Simulation* sim, const std::vector<Civilization*>& allCivs);
+    void playTurn(Map* map, Simulation* sim, const std::vector<Civilization*>& allCivs);//tura cywilizacji
 
-    void setBasePosition(int x, int y);
+    void setBasePosition(int x, int y);//ustawienie pozycji bazy cywilizacji
+
     
+    // Funkcje do pobierania informacji o cywilizacji
+
+    std::string getName() const { return name; }
+    
+    void setDeathTurn(int turn) {if (deathTurn == -1) deathTurn = turn;}
+
+    int getBuildingTurn(size_t index) const {
+        if (index < buildingTurns.size()) {
+            return buildingTurns[index];
+        }
+        return 0; // Zwraca 0 jeśli budynku jeszcze nie ma
+    }
+
+    void addCollectedArtifact() { collectedArtifacts++; }
+
+    int getCollectedArtifacts() const { return collectedArtifacts; }
+
     int get_X() const{return baseX; }
 
     int get_Y() const{return baseY; }
@@ -80,17 +95,4 @@ public:
     const std::vector<Unit*>& getUnits() const { return units; }
 
     int getDeathTurn() const { return deathTurn; }
-    
-    void setDeathTurn(int turn) {if (deathTurn == -1) deathTurn = turn;}
-
-    int getBuildingTurn(size_t index) const {
-        if (index < buildingTurns.size()) {
-            return buildingTurns[index];
-        }
-        return 0; // Zwraca 0 lub tekst "Brak", jeśli budynku jeszcze nie ma
-    }
-
-    void addCollectedArtifact() { collectedArtifacts++; }
-
-    int getCollectedArtifacts() const { return collectedArtifacts; }
 };

@@ -4,7 +4,7 @@
 
 Unit::~Unit(){}
 
-
+// Aktualizacja stanu jednostki (buffy, cooldowny, itp.)
 void Unit::update(){
     if (cooldownTime > 0){
         cooldownTime--;
@@ -30,6 +30,7 @@ void Unit::update(){
     }
 }
 
+// Funkcja do podnoszenia artefaktów przez jednostkę
 void Unit::pickUpArtifact(Artifact* artifact){
     
     if (artifact != nullptr){
@@ -55,6 +56,7 @@ void Unit::pickUpArtifact(Artifact* artifact){
     }
 }
 
+// Funkcja wywoływana, gdy jednostka zostaje pokonana (np. w walce)
 void Unit::defeat() {
     
     this->isActive = false;
@@ -66,12 +68,14 @@ void Unit::defeat() {
     this->backToLifeCooldown = 40; 
 }
 
+// Ruch jednostki w stronę docelowych koordynatów
 void Unit::move(Map* map, int targetX, int targetY) {
     int current_X = this->get_X();
     int current_Y = this->get_Y();
 
     for (int step = 0; step < this->currentSpeed; ){
 
+        // Jeśli docelowe koordynaty są takie same jak aktualne, nie ruszamy się
         if (-1 == targetX && -1 == targetY){
             break;
         }
@@ -80,6 +84,7 @@ void Unit::move(Map* map, int targetX, int targetY) {
             break;
         }
         
+        // Ruch w kierunku docelowych koordynatów
         if (current_X < targetX){
             current_X++;
             step++;
@@ -98,6 +103,7 @@ void Unit::move(Map* map, int targetX, int targetY) {
             step++;
         };
 
+        // Sprawdzamy, czy na nowej pozycji jest artefakt do podniesienia
         GameObject* objectOnTile = map->getTileContent(current_X, current_Y);
         if (objectOnTile != nullptr) {
             Artifact* foundArtifact = dynamic_cast<Artifact*>(objectOnTile);
@@ -109,6 +115,7 @@ void Unit::move(Map* map, int targetX, int targetY) {
         }
     };
 
+    // Aktualizujemy pozycję jednostki po ruchu
     this->set_X(current_X); 
     this->set_Y(current_Y);
 }

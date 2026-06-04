@@ -11,17 +11,17 @@
 
 using namespace std;
 
-
+//rozmiar mapy
 void Map::generateMap(){
-    //rozmiar mapy
     size = 100;
 }
 
+//dodawanie do vektora objektów
 void Map::addEntity(GameObject* object){
-    //dodawanie do vektora objektów
     entities.push_back(object);
 }
 
+//usuwanie objektów z vektora
 void Map::remove_Entity(GameObject* object){
     if(object == nullptr) return;
 
@@ -32,6 +32,7 @@ void Map::remove_Entity(GameObject* object){
     }
 }
 
+//sprawdzanie konkretnego pola
 GameObject* Map::getTileContent(int x, int y, GameObject* ignore){
     for(GameObject* object : entities){
         // Sprawdzamy czy obiekt to nie jest ten, który chcemy zignorować
@@ -42,6 +43,7 @@ GameObject* Map::getTileContent(int x, int y, GameObject* ignore){
     return nullptr;
 }
 
+//skanowanie pola w promieniu wzroku
 std::vector<GameObject*> Map::getObjectInGrid(int centerX, int centerY, int radius){
     std::vector<GameObject*> foundObjectPosition;
     //przszukujemy vektor i obliczamy rużnice miedzy obiektami

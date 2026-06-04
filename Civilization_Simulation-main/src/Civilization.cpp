@@ -17,7 +17,6 @@ void Civilization::setBasePosition(int x, int y) {
 }
 
 void Civilization::reportResources(int x, int y){
-
     std::pair<int, int> newResource = {x, y};
     
     if (std::find(knownResources.begin(),knownResources.end(),newResource) == knownResources.end()){
@@ -30,11 +29,10 @@ void Civilization::dispatchGatherer(){
 
     for (auto& unit : units){
         if (knownResources.empty())break;
-        
         Gatherer* gatherer = dynamic_cast<Gatherer*>(unit);
         Warrior* warrior = dynamic_cast<Warrior*>(unit);
         if (gatherer && gatherer->get_is_Waiting()){
-            
+            // Przypisanie pierwszego znanego surowca do zbieracza
             std::pair<int, int> resourceCoords = knownResources.back();
             gatherer->assignTargetResource(resourceCoords.first, resourceCoords.second); 
             knownResources.pop_back();
@@ -50,7 +48,7 @@ void Civilization::addResource(int amount) {
     }
 }
 
-// Przegrana jednostki (powrót do bazy na 5 tur)
+// Przegrana jednostki (powrót do bazy)
 void Civilization::unitDefeated(Unit* defeatedUnit) {
     if (defeatedUnit != nullptr) {
 
@@ -105,14 +103,13 @@ bool Civilization::buildCity(Simulation* sim, Map* map) {
 }
 
 void Civilization::playTurn(Map* map, Simulation* sim, const std::vector<Civilization*>& allCivs) {
-    
+
     {
         std::lock_guard<std::recursive_mutex> lock(map->getMutex());
         dispatchGatherer(); 
         buildCity(sim,map); 
     }
 
-   
     std::vector<Unit*> unitsToUpdate;
     {
         std::lock_guard<std::recursive_mutex> lock(map->getMutex());
@@ -153,7 +150,7 @@ void Civilization::playTurn(Map* map, Simulation* sim, const std::vector<Civiliz
                     // wywołanie rozstrzygnięcia walki
                     sim->resolveCombat(unit, otherUnit); 
 
-                    // KLUCZOWE: Jeśli nasza jednostka poległa w tej walce, przerywamy jej turę!
+                    // Jeśli nasza jednostka poległa w tej walce, przerywamy jej turę!
                     if (unit == nullptr || !unit->get_isActive()) {
                         break; 
                     }

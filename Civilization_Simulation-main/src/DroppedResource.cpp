@@ -8,6 +8,7 @@ void DroppedResource::update() {
     }
 }
 
+// Funkcja do pobierania surowców z upuszczonego zasobu
 int DroppedResource::extract(int requestedAmount) {
     if (amount >= requestedAmount) {
         amount -= requestedAmount;
@@ -19,6 +20,7 @@ int DroppedResource::extract(int requestedAmount) {
     }
 }
 
+// Funkcja do redukcji ilości surowca (np. gdy zbieracz zbiera surowce)
 void DroppedResource::reduceAmount(int qty) {
     this->amount -= qty;
     if (this->amount < 0) {

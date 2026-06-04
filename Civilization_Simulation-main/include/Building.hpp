@@ -10,6 +10,7 @@ private:
 public:
     Building(int cost, Benefit benefit) : cost(cost), benefit(benefit) {}
 
+    // Funkcje do pobierania informacji o budynku
     int getCost() const { return cost; }
     Benefit getBenefit() const { return benefit; }
 };

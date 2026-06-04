@@ -7,6 +7,7 @@ void Resource::update(){
     }
 }
 
+// Funkcja do redukcji ilości surowca (np. gdy zbieracz zbiera surowce)
 void Resource::reduceAmount(int qty) {
     this->amount -= qty;
     if (this->amount < 0) {

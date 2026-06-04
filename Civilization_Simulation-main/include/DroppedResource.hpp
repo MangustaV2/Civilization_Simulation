@@ -14,11 +14,12 @@ public:
     
     void update() override;
 
+    void reduceAmount(int qty);// Funkcja do redukcji ilości surowca (np. gdy zbieracz zbiera surowce)
+
+    int extract(int requestedAmount);// Funkcja do pobierania surowców z upuszczonego zasobu
+
+    // Funkcja do pobierania aktualnej ilości surowca w upuszczonym zasobie
     int getAmount() const{
         return amount;
     };
-
-    void reduceAmount(int qty);
-
-    int extract(int requestedAmount);
 };

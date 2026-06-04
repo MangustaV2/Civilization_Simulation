@@ -14,7 +14,7 @@ public:
     
     void update() override;
 
-    int getAmount() const{return amount;};
+    int getAmount() const{return amount;};// Funkcja do pobierania aktualnej ilości surowca
 
-    void reduceAmount(int qty);
+    void reduceAmount(int qty);// Funkcja do redukcji ilości surowca (np. gdy zbieracz zbiera surowce)
 };

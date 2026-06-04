@@ -144,23 +144,7 @@ void Simulation::run() {
     }
 }
 
-/* void Simulation::run() {
-
-        // B. Ruch i Akcje każdej cywilizacji
-        std::vector<std::future<void>> turnFutures;
-
-        for (Civilization* civ : civilizations) {
-            // std::async uruchamia metodę playTurn w osobnym wątku systemowym
-            turnFutures.push_back(std::async(std::launch::async, &Civilization::playTurn, civ, &map, this, std::ref(civilizations)));
-        }
-
-        // Oczekiwanie synchronizacyjne - główny wątek czeka, aż wszystkie 4 podwątki skończą tę turę
-        for (auto& future : turnFutures) {
-            future.get();
-        }
-}
-*/
-
+// Funkcja ustawiająca interwały pojawiania się surowców i artefaktów (na podstawie inputu lub domyślnych wartości)
 void Simulation::generateRandom(SpawnType type, Civilization* civ) {
     srand(time(0));
     int attempts = 0;
@@ -216,6 +200,7 @@ void Simulation::generateRandom(SpawnType type, Civilization* civ) {
     }
 }
 
+// Funkcja odczytująca dane do symulację z pliku CSV
 void Simulation::inputFromCSV(const std::string& filename) {
     std::ifstream file(filename);
     if (!file.is_open()) {
@@ -250,6 +235,7 @@ void Simulation::inputFromCSV(const std::string& filename) {
     std::cout << " -> Artefakty pojawiac sie beda co " << artifactSpawnInterval << " tur\n";
 }
 
+// Funkcja zapisująca wyniki symulacji do pliku CSV
 void Simulation::saveToCSV() {
     std::ofstream file("Wyniki_Symulacji.csv");
 
@@ -284,7 +270,8 @@ void Simulation::saveToCSV() {
 
     file.close();
 }
-    
+   
+// Funkcja rozstrzygająca walkę między dwoma jednostkami
 void Simulation::resolveCombat(Unit* u1, Unit* u2) {
     // Sprawdzamy typy obu jednostek (Gatherer - 0, Scout - 1, Warrior - 2)
     int type1 = -1, type2 = -1;
@@ -363,6 +350,7 @@ void Simulation::resolveCombat(Unit* u1, Unit* u2) {
     map.remove_Entity(loser);
 }
 
+//Destruktor symulacji - zwalnianie pamięci po cywilizacjach i obiektach na mapie
 Simulation::~Simulation() {
     // Usuwanie cywilizacji
     for (Civilization* civ : civilizations) {

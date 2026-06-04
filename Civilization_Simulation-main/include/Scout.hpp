@@ -25,5 +25,5 @@ public:
         this->backToLifeCooldown = 0;
     }
     
-    void performAction(Map* map, Simulation* sim) override;
+    void performAction(Map* map, Simulation* sim) override;//logika działania zwiadowcy
 };

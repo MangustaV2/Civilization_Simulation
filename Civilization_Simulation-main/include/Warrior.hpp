@@ -35,11 +35,11 @@ public:
         this->backToLifeCooldown = 0;
     }
 
-    Gatherer* getProtectedTarget() const { return protectedTarget; }
+    Gatherer* getProtectedTarget() const { return protectedTarget; }// Funkcja do pobierania zbieracza, którego wojownik ma chronić
 
-    void setProtectedTarget(Gatherer* target);
+    void setProtectedTarget(Gatherer* target);// Funkcja do ustawiania zbieracza, którego wojownik ma chronić
 
-    void performAction(Map* map, Simulation* sim) override;
+    void performAction(Map* map, Simulation* sim) override;//logika działania wojownika (patrolowanie i ochrona zbieracza)
 
 };
 
